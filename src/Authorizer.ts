@@ -34,5 +34,5 @@ const auth0Authorizier = async function (
   */
 };
 
-export { getAuthInfo };
+export { getAuthInfo, AuthorizerEvent, AuthOConfig };
 export default auth0Authorizier;
