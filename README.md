@@ -2,8 +2,7 @@
 
 authorizer.ts
 ```
-import { AuthorizerEvent, AuthOConfig } from "auth0-authorizer";
-import Auth0Authorizer from "auth0-authorizer";
+import Auth0Authorizer, { AuthorizerEvent, AuthOConfig } from "auth0-authorizer";
 
 export const auth0Config: AuthOConfig = {
   domain: "xxx.us.auth0.com",
