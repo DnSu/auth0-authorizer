@@ -2,6 +2,7 @@
   "name": "auth0-authorizer",
   "version": "1.0.0",
   "description": "",
+  "main": "dist/esm/Authorizer.js",
   "module": "dist/esm/Authorizer.js",
   "types": "dist/types/Authorizer.d.js",
   "scripts": {
