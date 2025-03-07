@@ -67,7 +67,7 @@ export var verifyToken = function (tokenValue, auth0Config) { return __awaiter(v
                             }
                             if (decoded) {
                                 decoded = decoded;
-                                var roles = decoded["".concat(auth0Config.audience, "/roles")];
+                                var roles = decoded["".concat(auth0Config.audience, "/roles")] || [];
                                 var rolesString = roles.join("|");
                                 // console.log("verifyToken: decoded: ", decoded);
                                 var decodedPayload = decoded;
