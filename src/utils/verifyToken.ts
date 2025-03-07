@@ -36,7 +36,7 @@ export const verifyToken = async (
         }
         if (decoded) {
           decoded = decoded as jwt.JwtPayload;
-          const roles = decoded[`${auth0Config.audience}/roles`] as string[];
+          const roles = decoded[`${auth0Config.audience}/roles`] as string[] || [];
           const rolesString = roles.join("|");
           // console.log("verifyToken: decoded: ", decoded);
           const decodedPayload = decoded as jwt.JwtPayload;
