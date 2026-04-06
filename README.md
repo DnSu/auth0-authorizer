@@ -28,6 +28,7 @@ Deep imports (for example `auth0-authorizer/dist/...` or `auth0-authorizer/src/.
 - The token `aud` must match `auth0Config.audience`.
 - The token `iss` must be `https://<your-auth0-domain>/`.
 - Roles are read from the custom claim `${audience}/roles` and exposed as `string[]`.
+- `clientId` is optional and currently not enforced during token verification.
 
 ## Authorizer function
 
@@ -38,7 +39,6 @@ import Auth0Authorizer, { AuthorizerEvent, AuthOConfig } from "auth0-authorizer"
 
 const auth0Config: AuthOConfig = {
   domain: "xxx.us.auth0.com",
-  clientId: "yyyy",
   audience: "https://my-api",
 };
 

@@ -15,6 +15,6 @@ export interface AuthorizerEvent {
 
 export interface AuthOConfig {
   domain: string;
-  clientId: string;
+  clientId?: string;
   audience: string;
 }
