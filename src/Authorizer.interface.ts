@@ -4,8 +4,6 @@ export interface EventRequestContextAuthorizer {
   principalId: string;
 }
 
-export type EventEequestContextAuthorizer = EventRequestContextAuthorizer;
-
 export interface AuthorizerEvent {
   routeArn?: string;
   methodArn?: string;
