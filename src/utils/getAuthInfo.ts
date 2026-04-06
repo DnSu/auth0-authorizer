@@ -1,8 +1,27 @@
 import { EventRequestContextAuthorizer } from "../Authorizer.interface";
 
+type LambdaAuthorizerContext = {
+  principalId: string;
+  roles: string[] | string;
+};
+
+type RequestAuthorizerContext = {
+  lambda?: LambdaAuthorizerContext;
+  principalId?: string;
+  roles?: string[] | string;
+};
+
+type EventWithAuthorizer = {
+  requestContext?: {
+    authorizer?: RequestAuthorizerContext;
+  };
+};
+
 const normalizeRoles = (rolesValue: unknown): string[] => {
   if (Array.isArray(rolesValue)) {
-    return rolesValue.filter((role): role is string => typeof role === "string");
+    return rolesValue.filter(
+      (role): role is string => typeof role === "string",
+    );
   }
 
   if (typeof rolesValue !== "string") {
@@ -18,7 +37,9 @@ const normalizeRoles = (rolesValue: unknown): string[] => {
     try {
       const parsed = JSON.parse(trimmed) as unknown;
       if (Array.isArray(parsed)) {
-        return parsed.filter((role): role is string => typeof role === "string");
+        return parsed.filter(
+          (role): role is string => typeof role === "string",
+        );
       }
     } catch {
       return [];
@@ -31,23 +52,19 @@ const normalizeRoles = (rolesValue: unknown): string[] => {
     .filter((role) => role.length > 0);
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export default function getAuthInfo(event: any): EventRequestContextAuthorizer {
-  const authorizerInfo = event.requestContext.authorizer as
-    | {
-        lambda?: {
-          principalId: string;
-          roles: string[] | string;
-        };
-        principalId?: string;
-        roles?: string[] | string;
-      }
-    | undefined;
+export default function getAuthInfo(
+  event: unknown,
+): EventRequestContextAuthorizer {
+  const typedEvent = event as EventWithAuthorizer;
+  const authorizerInfo = typedEvent.requestContext?.authorizer;
+
   if (!authorizerInfo)
     throw new Error("Auth is required, and no auth info was found");
+
   const roles = normalizeRoles(
     authorizerInfo?.roles || authorizerInfo?.lambda?.roles || [],
   );
+
   return {
     roles,
     role: roles,
