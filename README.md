@@ -30,6 +30,12 @@ Deep imports (for example `auth0-authorizer/dist/...` or `auth0-authorizer/src/.
 - Roles are read from the custom claim `${audience}/roles` and exposed as `string[]`.
 - `clientId` is optional and currently not enforced during token verification.
 
+## Auth0 Action example (Post-Login)
+
+Use the standalone Auth0 Action example in [examples/auth0-post-login-action.js](examples/auth0-post-login-action.js).
+
+For this package to read roles, ensure `auth0Config.audience` matches the audience/namespace used in the claim key.
+
 ## Authorizer function
 
 Create your authorizer Lambda (example: `src/authorizer.ts`):
