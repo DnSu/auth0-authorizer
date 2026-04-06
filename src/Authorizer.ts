@@ -3,13 +3,14 @@ import getTokenFromEvent from "./utils/getTokenFromEvent";
 import { verifyToken } from "./utils/verifyToken";
 import { AuthOConfig, AuthorizerEvent } from "./Authorizer.interface";
 import getAuthInfo from "./utils/getAuthInfo";
-import { Callback, CustomAuthorizerResult } from "aws-lambda";
+import { Callback } from "aws-lambda";
+import { AuthorizerPolicyResult } from "./utils/generatePolicy";
 
 const auth0Authorizier = async function (
   auth0Config: AuthOConfig,
   event: AuthorizerEvent,
   context: unknown,
-  callback: Callback<CustomAuthorizerResult>,
+  callback: Callback<AuthorizerPolicyResult>,
 ) {
   try {
     const tokenValue = getTokenFromEvent(event);

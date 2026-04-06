@@ -1,13 +1,28 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { CustomAuthorizerResult, Statement } from "aws-lambda";
+import { Statement } from "aws-lambda";
+
+type PolicyEffect = "Allow" | "Deny";
+export type PolicyContext = {
+  principalId: string;
+  roles: string[];
+  role?: string[];
+};
+
+export interface AuthorizerPolicyResult {
+  principalId: string;
+  policyDocument: {
+    Version: "2012-10-17";
+    Statement: Statement[];
+  };
+  context: PolicyContext;
+}
 
 export default function generatePolicy(
   principalId: string,
-  effect: any,
-  resource: any,
-  context: any,
+  effect: PolicyEffect,
+  resource: string,
+  context: PolicyContext,
 ) {
-  const authResponse: CustomAuthorizerResult = {
+  const authResponse: AuthorizerPolicyResult = {
     principalId,
     policyDocument: {
       Version: "2012-10-17",
