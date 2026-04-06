@@ -5,6 +5,9 @@ import { AuthOConfig } from "../Authorizer.interface";
 
 const jwksClients = new Map<string, ReturnType<typeof jwksClient>>();
 
+const normalizeDomain = (domain: string) =>
+  domain.replace(/^https?:\/\//i, "").replace(/\/+$/, "");
+
 const getJwksClient = (domain: string) => {
   const existingClient = jwksClients.get(domain);
   if (existingClient) {
@@ -28,7 +31,7 @@ export const verifyToken = async (
   tokenValue: string,
   auth0Config: AuthOConfig,
 ) => {
-  const domain = auth0Config.domain;
+  const domain = normalizeDomain(auth0Config.domain);
   const jwksC = getJwksClient(domain);
 
   const verifyResult = await new Promise<
@@ -42,6 +45,11 @@ export const verifyToken = async (
       };
 
       const getPublicKey: jwt.GetPublicKeyOrSecret = (header, callback2) => {
+        if (!header.kid) {
+          callback2(new Error("verifyToken: Missing kid header"));
+          return;
+        }
+
         jwksC.getSigningKey(header.kid, (err, key) => {
           if (err) {
             callback2(err);

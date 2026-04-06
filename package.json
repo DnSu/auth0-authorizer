@@ -16,7 +16,9 @@
   "scripts": {
     "build": "yarn build:esm && yarn build:types",
     "build:esm": "tsc -p tsconfig.esm.json",
-    "build:types": "tsc -p tsconfig.types.json"
+    "build:types": "tsc -p tsconfig.types.json",
+    "prepack": "yarn build",
+    "prepublishOnly": "yarn build"
   },
   "files": [
     "dist"

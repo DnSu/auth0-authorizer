@@ -1,15 +1,19 @@
 import generatePolicy from "./utils/generatePolicy";
 import getTokenFromEvent from "./utils/getTokenFromEvent";
 import { verifyToken } from "./utils/verifyToken";
-import { AuthOConfig, AuthorizerEvent } from "./Authorizer.interface";
+import {
+  Auth0Config,
+  AuthOConfig,
+  AuthorizerEvent,
+} from "./Authorizer.interface";
 import getAuthInfo from "./utils/getAuthInfo";
 import { Callback } from "aws-lambda";
 import { AuthorizerPolicyResult } from "./utils/generatePolicy";
 
-const auth0Authorizier = async function (
+const auth0Authorizer = async function (
   auth0Config: AuthOConfig,
   event: AuthorizerEvent,
-  context: unknown,
+  _context: unknown,
   callback: Callback<AuthorizerPolicyResult>,
 ) {
   try {
@@ -37,13 +41,7 @@ const auth0Authorizier = async function (
   } catch {
     callback("Unauthorized");
   }
-  /*
-  callback(null, generatePolicy("user", "Allow", event.methodArn));
-  callback(null, generatePolicy("user", "Deny", event.methodArn));
-  callback("Unauthorized"); // Return a 401 Unauthorized response
-  callback("Error: Invalid token"); // Return a 500 Invalid token response
-  */
 };
 
-export { getAuthInfo, AuthorizerEvent, AuthOConfig };
-export default auth0Authorizier;
+export { getAuthInfo, AuthorizerEvent, AuthOConfig, Auth0Config };
+export default auth0Authorizer;

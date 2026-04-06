@@ -1,13 +1,28 @@
 import { AuthorizerEvent } from "../Authorizer.interface";
 
 function getTokenFromEvent(event: AuthorizerEvent) {
-  const headerAuthorization: string =
-    event.headers?.authorization || event.authorizationToken || "";
-  const tokenParts = headerAuthorization.split(" ");
+  const headerAuthorization =
+    event.headers?.authorization ??
+    event.headers?.Authorization ??
+    event.authorizationToken ??
+    "";
+
+  const trimmedHeader = headerAuthorization.trim();
+  if (!trimmedHeader) {
+    throw new Error("Unauthorized");
+  }
+
+  const tokenParts = trimmedHeader.split(/\s+/);
   const tokenType = tokenParts[0];
   const tokenValue = tokenParts[1];
 
-  if (!(tokenType?.toLowerCase() === "bearer" && tokenValue)) {
+  if (
+    !(
+      tokenType?.toLowerCase() === "bearer" &&
+      tokenValue &&
+      tokenParts.length === 2
+    )
+  ) {
     throw new Error("Unauthorized");
   }
 

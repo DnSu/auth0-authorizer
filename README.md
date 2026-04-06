@@ -15,7 +15,7 @@ Use only the package root import:
 ```ts
 import Auth0Authorizer, {
   AuthorizerEvent,
-  AuthOConfig,
+  Auth0Config,
   getAuthInfo,
 } from "auth0-authorizer";
 ```
@@ -41,9 +41,9 @@ For this package to read roles, ensure `auth0Config.audience` matches the audien
 Create your authorizer Lambda (example: `src/authorizer.ts`):
 
 ```ts
-import Auth0Authorizer, { AuthorizerEvent, AuthOConfig } from "auth0-authorizer";
+import Auth0Authorizer, { AuthorizerEvent, Auth0Config } from "auth0-authorizer";
 
-const auth0Config: AuthOConfig = {
+const auth0Config: Auth0Config = {
   domain: "xxx.us.auth0.com",
   audience: "https://my-api",
 };

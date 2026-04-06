@@ -9,6 +9,7 @@ export interface AuthorizerEvent {
   authorizationToken?: string;
   headers?: {
     authorization?: string;
+    Authorization?: string;
   };
 }
 
@@ -17,3 +18,5 @@ export interface AuthOConfig {
   clientId?: string;
   audience: string;
 }
+
+export type Auth0Config = AuthOConfig;
