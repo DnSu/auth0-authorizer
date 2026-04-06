@@ -120,7 +120,12 @@ Returned values:
 
 - `principalId`: Auth0 user subject (`sub`)
 - `roles`: string array from `${audience}/roles`
-- `role`: alias of `roles` for backward compatibility
+- `role`: alias of `roles` for backward compatibility (deprecated)
+
+### Compatibility note
+
+- Prefer `auth.roles` in new code.
+- `auth.role` is deprecated and planned for removal in `v2.0.0`.
 
 ## Behavior
 
