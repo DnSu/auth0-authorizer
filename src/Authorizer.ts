@@ -3,13 +3,13 @@ import getTokenFromEvent from "./utils/getTokenFromEvent";
 import { verifyToken } from "./utils/verifyToken";
 import { AuthOConfig, AuthorizerEvent } from "./Authorizer.interface";
 import getAuthInfo from "./utils/getAuthInfo";
+import { Callback, CustomAuthorizerResult } from "aws-lambda";
 
 const auth0Authorizier = async function (
   auth0Config: AuthOConfig,
   event: AuthorizerEvent,
   context: unknown,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  callback: any,
+  callback: Callback<CustomAuthorizerResult>,
 ) {
   try {
     const tokenValue = getTokenFromEvent(event);
