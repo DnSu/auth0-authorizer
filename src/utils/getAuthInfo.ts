@@ -67,7 +67,6 @@ export default function getAuthInfo(
 
   return {
     roles,
-    role: roles,
     principalId:
       authorizerInfo?.principalId || authorizerInfo?.lambda?.principalId || "",
   };

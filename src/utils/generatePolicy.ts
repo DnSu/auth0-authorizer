@@ -4,7 +4,6 @@ type PolicyEffect = "Allow" | "Deny";
 export type PolicyContext = {
   principalId: string;
   roles: string[];
-  role?: string[];
 };
 
 export interface AuthorizerPolicyResult {

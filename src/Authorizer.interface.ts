@@ -1,6 +1,5 @@
 export interface EventRequestContextAuthorizer {
   roles: string[];
-  role: string[];
   principalId: string;
 }
 
