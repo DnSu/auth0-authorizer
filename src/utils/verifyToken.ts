@@ -3,28 +3,55 @@ import jwt from "jsonwebtoken";
 import jwksClient from "jwks-rsa";
 import { AuthOConfig } from "../Authorizer.interface";
 
+const jwksClients = new Map<string, ReturnType<typeof jwksClient>>();
+
+const getJwksClient = (domain: string) => {
+  const existingClient = jwksClients.get(domain);
+  if (existingClient) {
+    return existingClient;
+  }
+
+  const client = jwksClient({
+    jwksUri: `https://${domain}/.well-known/jwks.json`,
+    cache: true,
+    cacheMaxEntries: 10,
+    cacheMaxAge: 10 * 60 * 1000,
+    rateLimit: true,
+    jwksRequestsPerMinute: 10,
+  });
+
+  jwksClients.set(domain, client);
+  return client;
+};
+
 export const verifyToken = async (
   tokenValue: string,
   auth0Config: AuthOConfig,
 ) => {
+  const domain = auth0Config.domain;
+  const jwksC = getJwksClient(domain);
+
   const verifyResult = await new Promise<
-    false | { sub: string; roles: string }
+    false | { sub: string; roles: string[] }
   >((resolve) => {
     try {
       const options: jwt.VerifyOptions = {
         audience: auth0Config.audience,
-        issuer: `https://${auth0Config.domain}/`,
+        issuer: `https://${domain}/`,
+        algorithms: ["RS256"],
       };
+
       const getPublicKey: jwt.GetPublicKeyOrSecret = (header, callback2) => {
-        const jwksC = jwksClient({
-          jwksUri: `https://${auth0Config.domain}/.well-known/jwks.json`,
-          cache: true,
-        });
-        // console.log(header);
         jwksC.getSigningKey(header.kid, (err, key) => {
-          // console.log(key);
+          if (err) {
+            callback2(err);
+            return;
+          }
           const signingKey = key?.getPublicKey();
-          // console.log(signingKey);
+          if (!signingKey) {
+            callback2(new Error("verifyToken: Missing signing key"));
+            return;
+          }
           callback2(null, signingKey);
         });
       };
@@ -33,15 +60,28 @@ export const verifyToken = async (
         if (verifyError) {
           console.log("verifyToken: ", verifyError);
           resolve(false);
+          return;
         }
-        if (decoded) {
-          decoded = decoded as jwt.JwtPayload;
-          const roles = decoded[`${auth0Config.audience}/roles`] as string[] || [];
-          const rolesString = roles.join("|");
-          // console.log("verifyToken: decoded: ", decoded);
-          const decodedPayload = decoded as jwt.JwtPayload;
-          resolve({ sub: decodedPayload.sub as string, roles: rolesString });
+
+        if (!decoded || typeof decoded === "string") {
+          resolve(false);
+          return;
         }
+
+        const decodedPayload = decoded as jwt.JwtPayload;
+        const sub = decodedPayload.sub;
+        if (typeof sub !== "string" || sub.length === 0) {
+          resolve(false);
+          return;
+        }
+
+        const rolesClaim = decodedPayload[`${auth0Config.audience}/roles`];
+        const roles = Array.isArray(rolesClaim)
+          ? rolesClaim.filter(
+              (role): role is string => typeof role === "string",
+            )
+          : [];
+        resolve({ sub, roles });
       });
     } catch (err) {
       console.log("verifyToken: Invalid token", err);

@@ -1,18 +1,16 @@
 import { AuthorizerEvent } from "../Authorizer.interface";
 
-function getTokenFromEvent(
-  event: AuthorizerEvent,
-  callback: (error: string | null) => void,
-) {
+function getTokenFromEvent(event: AuthorizerEvent) {
   const headerAuthorization: string =
     event.headers?.authorization || event.authorizationToken || "";
   const tokenParts = headerAuthorization.split(" ");
+  const tokenType = tokenParts[0];
   const tokenValue = tokenParts[1];
-  if (!(tokenParts[0].toLowerCase() === "bearer" && tokenValue)) {
-    // no auth token!
-    console.log("authorizationToken is malformed");
-    callback("Unauthorized"); // Return a 401 Unauthorized response
+
+  if (!(tokenType?.toLowerCase() === "bearer" && tokenValue)) {
+    throw new Error("Unauthorized");
   }
+
   return tokenValue;
 }
 

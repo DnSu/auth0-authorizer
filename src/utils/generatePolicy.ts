@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CustomAuthorizerResult, Statement } from "aws-lambda";
 
 export default function generatePolicy(

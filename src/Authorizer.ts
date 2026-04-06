@@ -8,23 +8,33 @@ const auth0Authorizier = async function (
   auth0Config: AuthOConfig,
   event: AuthorizerEvent,
   context: unknown,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   callback: any,
 ) {
-  const tokenValue = getTokenFromEvent(event, callback);
-  const verifyResult = await verifyToken(tokenValue, auth0Config);
-  if (verifyResult === false) {
-    callback("Error: Invalid token"); // Return a 401 Unauthorized response
-  } else {
-    // console.log(verifyResult);
+  try {
+    const tokenValue = getTokenFromEvent(event);
+    const verifyResult = await verifyToken(tokenValue, auth0Config);
+
+    if (verifyResult === false) {
+      callback("Unauthorized");
+      return;
+    }
+
     const resource: string = event.methodArn || event.routeArn || "";
+    if (!resource) {
+      callback("Unauthorized");
+      return;
+    }
+
     callback(
       null,
       generatePolicy(verifyResult.sub, "Allow", resource, {
         roles: verifyResult.roles,
-        accessToken: tokenValue,
         principalId: verifyResult.sub,
       }),
     );
+  } catch {
+    callback("Unauthorized");
   }
   /*
   callback(null, generatePolicy("user", "Allow", event.methodArn));

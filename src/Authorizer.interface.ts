@@ -1,8 +1,10 @@
-export interface EventEequestContextAuthorizer {
-  role: string;
+export interface EventRequestContextAuthorizer {
+  roles: string[];
+  role: string[];
   principalId: string;
-  accessToken: string;
 }
+
+export type EventEequestContextAuthorizer = EventRequestContextAuthorizer;
 
 export interface AuthorizerEvent {
   routeArn?: string;
