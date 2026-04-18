@@ -1,4 +1,4 @@
-export interface EventRequestContextAuthorizer {
+export interface AuthInfo {
     roles: string[];
     principalId: string;
 }

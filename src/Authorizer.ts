@@ -2,6 +2,7 @@ import generatePolicy from "./utils/generatePolicy";
 import getTokenFromEvent from "./utils/getTokenFromEvent";
 import { verifyToken } from "./utils/verifyToken";
 import {
+  AuthInfo,
   Auth0Config,
   AuthOConfig,
   AuthorizerEvent,
@@ -43,5 +44,5 @@ const auth0Authorizer = async function (
   }
 };
 
-export { getAuthInfo, AuthorizerEvent, AuthOConfig, Auth0Config };
+export { getAuthInfo, AuthorizerEvent, AuthOConfig, Auth0Config, AuthInfo };
 export default auth0Authorizer;

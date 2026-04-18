@@ -1,4 +1,4 @@
-import { EventRequestContextAuthorizer } from "../Authorizer.interface";
+import { AuthInfo } from "../Authorizer.interface";
 
 type LambdaAuthorizerContext = {
   principalId: string;
@@ -52,9 +52,7 @@ const normalizeRoles = (rolesValue: unknown): string[] => {
     .filter((role) => role.length > 0);
 };
 
-export default function getAuthInfo(
-  event: unknown,
-): EventRequestContextAuthorizer {
+export default function getAuthInfo(event: unknown): AuthInfo {
   const typedEvent = event as EventWithAuthorizer;
   const authorizerInfo = typedEvent.requestContext?.authorizer;
 
