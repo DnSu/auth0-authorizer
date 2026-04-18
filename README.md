@@ -14,6 +14,7 @@ Use only the package root import:
 
 ```ts
 import Auth0Authorizer, {
+  AuthInfo,
   AuthorizerEvent,
   Auth0Config,
   getAuthInfo,
@@ -107,10 +108,10 @@ functions:
 Use `getAuthInfo(event)` inside handlers behind this authorizer:
 
 ```ts
-import { getAuthInfo } from "auth0-authorizer";
+import { AuthInfo, getAuthInfo } from "auth0-authorizer";
 
 export const protectedHandler = async (event: any) => {
-  const auth = getAuthInfo(event);
+  const auth: AuthInfo = getAuthInfo(event);
 
   return {
     statusCode: 200,
@@ -126,6 +127,10 @@ Returned values:
 
 - `principalId`: Auth0 user subject (`sub`)
 - `roles`: string array from `${audience}/roles`
+
+Type information:
+
+- `AuthInfo`: `{ principalId: string; roles: string[] }`
 
 ## Behavior
 
