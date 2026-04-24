@@ -32,8 +32,8 @@ export default function getAuthInfo(event) {
     if (!authorizerInfo)
         throw new Error("Auth is required, and no auth info was found");
     var roles = normalizeRoles((authorizerInfo === null || authorizerInfo === void 0 ? void 0 : authorizerInfo.roles) || ((_b = authorizerInfo === null || authorizerInfo === void 0 ? void 0 : authorizerInfo.lambda) === null || _b === void 0 ? void 0 : _b.roles) || []);
-    var principalId = (authorizerInfo === null || authorizerInfo === void 0 ? void 0 : authorizerInfo.principalId) || ((_c = authorizerInfo === null || authorizerInfo === void 0 ? void 0 : authorizerInfo.lambda) === null || _c === void 0 ? void 0 : _c.principalId);
-    if (!principalId)
-        throw new Error("Auth context is missing principalId");
-    return { roles: roles, principalId: principalId };
+    return {
+        roles: roles,
+        principalId: (authorizerInfo === null || authorizerInfo === void 0 ? void 0 : authorizerInfo.principalId) || ((_c = authorizerInfo === null || authorizerInfo === void 0 ? void 0 : authorizerInfo.lambda) === null || _c === void 0 ? void 0 : _c.principalId) || "",
+    };
 }

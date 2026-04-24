@@ -40,16 +40,11 @@ import { verifyToken } from "./utils/verifyToken";
 import getAuthInfo from "./utils/getAuthInfo";
 var auth0Authorizer = function (auth0Config, event, _context, callback) {
     return __awaiter(this, void 0, void 0, function () {
-        var resource, tokenValue, verifyResult, _a;
+        var tokenValue, verifyResult, resource, _a;
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
                     _b.trys.push([0, 2, , 3]);
-                    resource = event.methodArn || event.routeArn || "";
-                    if (!resource) {
-                        callback("Unauthorized");
-                        return [2 /*return*/];
-                    }
                     tokenValue = getTokenFromEvent(event);
                     return [4 /*yield*/, verifyToken(tokenValue, auth0Config)];
                 case 1:
@@ -58,8 +53,14 @@ var auth0Authorizer = function (auth0Config, event, _context, callback) {
                         callback("Unauthorized");
                         return [2 /*return*/];
                     }
+                    resource = event.methodArn || event.routeArn || "";
+                    if (!resource) {
+                        callback("Unauthorized");
+                        return [2 /*return*/];
+                    }
                     callback(null, generatePolicy(verifyResult.sub, "Allow", resource, {
                         roles: verifyResult.roles,
+                        principalId: verifyResult.sub,
                     }));
                     return [3 /*break*/, 3];
                 case 2:

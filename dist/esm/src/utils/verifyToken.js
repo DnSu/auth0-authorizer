@@ -34,6 +34,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+// import { auth0Config } from "../../Config/auth0";
 import jwt from "jsonwebtoken";
 import jwksClient from "jwks-rsa";
 var jwksClients = new Map();
@@ -57,55 +58,69 @@ var getJwksClient = function (domain) {
     return client;
 };
 export var verifyToken = function (tokenValue, auth0Config) { return __awaiter(void 0, void 0, void 0, function () {
-    var domain, jwksC;
+    var domain, jwksC, verifyResult;
     return __generator(this, function (_a) {
-        domain = normalizeDomain(auth0Config.domain);
-        jwksC = getJwksClient(domain);
-        return [2 /*return*/, new Promise(function (resolve) {
-                var options = {
-                    audience: auth0Config.audience,
-                    issuer: "https://".concat(domain, "/"),
-                    algorithms: ["RS256"],
-                };
-                var getPublicKey = function (header, callback) {
-                    if (!header.kid) {
-                        callback(new Error("verifyToken: Missing kid header"));
-                        return;
-                    }
-                    jwksC.getSigningKey(header.kid, function (err, key) {
-                        if (err) {
-                            callback(err);
-                            return;
+        switch (_a.label) {
+            case 0:
+                domain = normalizeDomain(auth0Config.domain);
+                jwksC = getJwksClient(domain);
+                return [4 /*yield*/, new Promise(function (resolve) {
+                        try {
+                            var options = {
+                                audience: auth0Config.audience,
+                                issuer: "https://".concat(domain, "/"),
+                                algorithms: ["RS256"],
+                            };
+                            var getPublicKey = function (header, callback2) {
+                                if (!header.kid) {
+                                    callback2(new Error("verifyToken: Missing kid header"));
+                                    return;
+                                }
+                                jwksC.getSigningKey(header.kid, function (err, key) {
+                                    if (err) {
+                                        callback2(err);
+                                        return;
+                                    }
+                                    var signingKey = key === null || key === void 0 ? void 0 : key.getPublicKey();
+                                    if (!signingKey) {
+                                        callback2(new Error("verifyToken: Missing signing key"));
+                                        return;
+                                    }
+                                    callback2(null, signingKey);
+                                });
+                            };
+                            jwt.verify(tokenValue, getPublicKey, options, function (verifyError, decoded) {
+                                if (verifyError) {
+                                    console.log("verifyToken: ", verifyError);
+                                    resolve(false);
+                                    return;
+                                }
+                                if (!decoded || typeof decoded === "string") {
+                                    resolve(false);
+                                    return;
+                                }
+                                var decodedPayload = decoded;
+                                var sub = decodedPayload.sub;
+                                if (typeof sub !== "string" || sub.length === 0) {
+                                    resolve(false);
+                                    return;
+                                }
+                                var rolesClaim = decodedPayload["".concat(auth0Config.audience, "/roles")];
+                                var roles = Array.isArray(rolesClaim)
+                                    ? rolesClaim.filter(function (role) { return typeof role === "string"; })
+                                    : [];
+                                resolve({ sub: sub, roles: roles });
+                            });
                         }
-                        var signingKey = key === null || key === void 0 ? void 0 : key.getPublicKey();
-                        if (!signingKey) {
-                            callback(new Error("verifyToken: Missing signing key"));
-                            return;
+                        catch (err) {
+                            console.log("verifyToken: Invalid token", err);
+                            resolve(false);
                         }
-                        callback(null, signingKey);
-                    });
-                };
-                jwt.verify(tokenValue, getPublicKey, options, function (verifyError, decoded) {
-                    if (verifyError) {
-                        resolve(false);
-                        return;
-                    }
-                    if (!decoded || typeof decoded === "string") {
-                        resolve(false);
-                        return;
-                    }
-                    var decodedPayload = decoded;
-                    var sub = decodedPayload.sub;
-                    if (typeof sub !== "string" || sub.length === 0) {
-                        resolve(false);
-                        return;
-                    }
-                    var rolesClaim = decodedPayload["".concat(auth0Config.audience, "/roles")];
-                    var roles = Array.isArray(rolesClaim)
-                        ? rolesClaim.filter(function (role) { return typeof role === "string"; })
-                        : [];
-                    resolve({ sub: sub, roles: roles });
-                });
-            })];
+                    })];
+            case 1:
+                verifyResult = _a.sent();
+                // console.log("verifyToken: ", verifyResult);
+                return [2 /*return*/, verifyResult];
+        }
     });
 }); };
