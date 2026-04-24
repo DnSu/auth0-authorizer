@@ -2,7 +2,6 @@ import { Statement } from "aws-lambda";
 
 type PolicyEffect = "Allow" | "Deny";
 export type PolicyContext = {
-  principalId: string;
   roles: string[];
 };
 
@@ -21,22 +20,18 @@ export default function generatePolicy(
   resource: string,
   context: PolicyContext,
 ) {
-  const authResponse: AuthorizerPolicyResult = {
+  const statementOne: Statement = {
+    Action: "execute-api:Invoke",
+    Effect: effect,
+    Resource: resource,
+  };
+
+  return {
     principalId,
     policyDocument: {
-      Version: "2012-10-17",
-      Statement: [],
+      Version: "2012-10-17" as const,
+      Statement: [statementOne],
     },
     context,
   };
-
-  if (effect && resource) {
-    const statementOne: Statement = {
-      Action: "execute-api:Invoke",
-      Effect: effect,
-      Resource: resource,
-    };
-    authResponse.policyDocument.Statement[0] = statementOne;
-  }
-  return authResponse;
 }

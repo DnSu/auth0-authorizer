@@ -63,9 +63,9 @@ export default function getAuthInfo(event: unknown): AuthInfo {
     authorizerInfo?.roles || authorizerInfo?.lambda?.roles || [],
   );
 
-  return {
-    roles,
-    principalId:
-      authorizerInfo?.principalId || authorizerInfo?.lambda?.principalId || "",
-  };
+  const principalId =
+    authorizerInfo?.principalId || authorizerInfo?.lambda?.principalId;
+  if (!principalId) throw new Error("Auth context is missing principalId");
+
+  return { roles, principalId };
 }
