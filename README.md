@@ -8,6 +8,12 @@ JWT authorizer helper for AWS Lambda + API Gateway using Auth0 RS256 tokens.
 yarn add auth0-authorizer
 ```
 
+For TypeScript projects, also install the AWS Lambda types:
+
+```bash
+yarn add -D @types/aws-lambda
+```
+
 ## Public API
 
 Use only the package root import:
