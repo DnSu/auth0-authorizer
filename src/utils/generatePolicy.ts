@@ -3,6 +3,7 @@ import { Statement } from "aws-lambda";
 type PolicyEffect = "Allow" | "Deny";
 export type PolicyContext = {
   roles: string[];
+  authUser: string;
 };
 
 export interface AuthorizerPolicyResult {

@@ -1,14 +1,17 @@
+import { JwtPayload } from "jsonwebtoken";
 import { AuthInfo } from "../Authorizer.interface";
 
 type LambdaAuthorizerContext = {
   principalId: string;
   roles: string[] | string;
+  authUser?: string;
 };
 
 type RequestAuthorizerContext = {
   lambda?: LambdaAuthorizerContext;
   principalId?: string;
   roles?: string[] | string;
+  authUser?: string;
 };
 
 type EventWithAuthorizer = {
@@ -67,5 +70,16 @@ export default function getAuthInfo(event: unknown): AuthInfo {
     authorizerInfo?.principalId || authorizerInfo?.lambda?.principalId;
   if (!principalId) throw new Error("Auth context is missing principalId");
 
-  return { roles, principalId };
+  const authUserRaw =
+    authorizerInfo?.authUser || authorizerInfo?.lambda?.authUser;
+  if (!authUserRaw) throw new Error("Auth context is missing authUser");
+
+  let authUser: JwtPayload;
+  try {
+    authUser = JSON.parse(authUserRaw) as JwtPayload;
+  } catch {
+    throw new Error("Auth context authUser is not valid JSON");
+  }
+
+  return { roles, principalId, authUser };
 }

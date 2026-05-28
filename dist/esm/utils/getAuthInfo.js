@@ -26,7 +26,7 @@ var normalizeRoles = function (rolesValue) {
         .filter(function (role) { return role.length > 0; });
 };
 export default function getAuthInfo(event) {
-    var _a, _b, _c;
+    var _a, _b, _c, _d;
     var typedEvent = event;
     var authorizerInfo = (_a = typedEvent.requestContext) === null || _a === void 0 ? void 0 : _a.authorizer;
     if (!authorizerInfo)
@@ -35,5 +35,15 @@ export default function getAuthInfo(event) {
     var principalId = (authorizerInfo === null || authorizerInfo === void 0 ? void 0 : authorizerInfo.principalId) || ((_c = authorizerInfo === null || authorizerInfo === void 0 ? void 0 : authorizerInfo.lambda) === null || _c === void 0 ? void 0 : _c.principalId);
     if (!principalId)
         throw new Error("Auth context is missing principalId");
-    return { roles: roles, principalId: principalId };
+    var authUserRaw = (authorizerInfo === null || authorizerInfo === void 0 ? void 0 : authorizerInfo.authUser) || ((_d = authorizerInfo === null || authorizerInfo === void 0 ? void 0 : authorizerInfo.lambda) === null || _d === void 0 ? void 0 : _d.authUser);
+    if (!authUserRaw)
+        throw new Error("Auth context is missing authUser");
+    var authUser;
+    try {
+        authUser = JSON.parse(authUserRaw);
+    }
+    catch (_e) {
+        throw new Error("Auth context authUser is not valid JSON");
+    }
+    return { roles: roles, principalId: principalId, authUser: authUser };
 }

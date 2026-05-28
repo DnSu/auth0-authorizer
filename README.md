@@ -124,6 +124,7 @@ export const protectedHandler = async (event: any) => {
     body: JSON.stringify({
       principalId: auth.principalId,
       roles: auth.roles,
+      email: auth.authUser["https://my-api/email"],
     }),
   };
 };
@@ -133,10 +134,13 @@ Returned values:
 
 - `principalId`: Auth0 user subject (`sub`)
 - `roles`: string array from `${audience}/roles`
+- `authUser`: fully decoded JWT payload (`JwtPayload` from `jsonwebtoken`) — includes all standard claims (`sub`, `iss`, `aud`, `exp`, `iat`, etc.) and any custom claims injected by Auth0 Actions
 
 Type information:
 
-- `AuthInfo`: `{ principalId: string; roles: string[] }`
+- `AuthInfo`: `{ principalId: string; roles: string[]; authUser: JwtPayload }`
+
+`authUser` gives downstream handlers access to the full token without re-verifying it. Custom Auth0 claims are keyed by namespace, e.g. `authUser["https://my-api/roles"]`.
 
 ## Behavior
 

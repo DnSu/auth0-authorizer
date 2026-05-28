@@ -104,7 +104,7 @@ export var verifyToken = function (tokenValue, auth0Config) { return __awaiter(v
                     var roles = Array.isArray(rolesClaim)
                         ? rolesClaim.filter(function (role) { return typeof role === "string"; })
                         : [];
-                    resolve({ sub: sub, roles: roles });
+                    resolve({ sub: sub, roles: roles, jwtPayload: decodedPayload });
                 });
             })];
     });

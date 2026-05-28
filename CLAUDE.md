@@ -36,7 +36,11 @@ yarn build:esm    # tsc -p tsconfig.esm.json
 yarn build:types  # tsc -p tsconfig.types.json
 ```
 
-`dist/` is committed to the repo. A pre-commit hook (`git/hooks/pre-commit`) runs `yarn build && git add dist/` automatically before each commit. The hook is not tracked by git — new contributors must set it up manually.
+`dist/` is committed to the repo. A pre-commit hook (`git/hooks/pre-commit`) runs `yarn build && git add dist/` automatically before each commit. The hook is tracked by git; new contributors must run the following once after cloning:
+
+```bash
+git config core.hooksPath git/hooks
+```
 
 ## Public API
 

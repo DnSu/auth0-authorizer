@@ -1,6 +1,9 @@
+import { JwtPayload } from "jsonwebtoken";
+
 export interface AuthInfo {
   roles: string[];
   principalId: string;
+  authUser: JwtPayload;
 }
 
 export interface AuthorizerEvent {

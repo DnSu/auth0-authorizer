@@ -60,6 +60,7 @@ var auth0Authorizer = function (auth0Config, event, _context, callback) {
                     }
                     callback(null, generatePolicy(verifyResult.sub, "Allow", resource, {
                         roles: verifyResult.roles,
+                        authUser: JSON.stringify(verifyResult.jwtPayload),
                     }));
                     return [3 /*break*/, 3];
                 case 2:

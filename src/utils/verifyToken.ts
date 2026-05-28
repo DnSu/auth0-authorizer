@@ -33,7 +33,7 @@ export const verifyToken = async (
   const domain = normalizeDomain(auth0Config.domain);
   const jwksC = getJwksClient(domain);
 
-  return new Promise<false | { sub: string; roles: string[] }>((resolve) => {
+  return new Promise<false | { sub: string; roles: string[]; jwtPayload: jwt.JwtPayload }>((resolve) => {
     const options: jwt.VerifyOptions = {
       audience: auth0Config.audience,
       issuer: `https://${domain}/`,
@@ -82,7 +82,7 @@ export const verifyToken = async (
       const roles = Array.isArray(rolesClaim)
         ? rolesClaim.filter((role): role is string => typeof role === "string")
         : [];
-      resolve({ sub, roles });
+      resolve({ sub, roles, jwtPayload: decodedPayload });
     });
   });
 };

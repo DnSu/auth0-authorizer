@@ -35,6 +35,7 @@ const auth0Authorizer = async function (
       null,
       generatePolicy(verifyResult.sub, "Allow", resource, {
         roles: verifyResult.roles,
+        authUser: JSON.stringify(verifyResult.jwtPayload),
       }),
     );
   } catch {
