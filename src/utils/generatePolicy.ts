@@ -1,7 +1,10 @@
 import { Statement } from "aws-lambda";
 
 type PolicyEffect = "Allow" | "Deny";
+
+// principalId is injected by generatePolicy from its first arg; callers omit it.
 export type PolicyContext = {
+  principalId: string;
   roles: string[];
   authUser: string;
 };
@@ -19,7 +22,7 @@ export default function generatePolicy(
   principalId: string,
   effect: PolicyEffect,
   resource: string,
-  context: PolicyContext,
+  context: Omit<PolicyContext, "principalId">,
 ) {
   const statementOne: Statement = {
     Action: "execute-api:Invoke",
@@ -33,6 +36,8 @@ export default function generatePolicy(
       Version: "2012-10-17" as const,
       Statement: [statementOne],
     },
-    context,
+    // Include principalId in context so HTTP API v2 forwards it to handlers
+    // via requestContext.authorizer.lambda.principalId.
+    context: { principalId, ...context },
   };
 }
