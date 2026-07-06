@@ -179,7 +179,29 @@ v3 is promise-based and no longer uses the Lambda callback:
 - Handler signature changed: `Auth0Authorizer(auth0Config, event)` returns the
   policy — return it from your handler. The `context` and `callback` arguments
   are gone.
+
+  ```ts
+  // v2
+  export const handler = (event, context, callback) =>
+    Auth0Authorizer(auth0Config, event, context, callback);
+
+  // v3
+  export const handler = async (event: AuthorizerEvent) =>
+    Auth0Authorizer(auth0Config, event);
+  ```
+
 - Auth failures now produce a Deny policy (HTTP `403`) instead of failing the
   invocation (`401` on REST APIs, an opaque `500` on HTTP APIs). If your client
   treats `401` specially (e.g. to trigger re-login), update it to handle `403`.
+- Policies are now scoped to the whole stage (`arn:...:api-id/stage/*`) instead
+  of the triggering route. A valid token is authorized for every route in the
+  stage, not just the one it hit — required for correctness with authorizer
+  result caching (see [Behavior](#behavior)). If you relied on per-route
+  policies for authorization, enforce route-level access in your handlers
+  instead (e.g. via `getAuthInfo(event).roles`).
+- An empty or missing `domain`/`audience` in `Auth0Config` now throws (`500`)
+  instead of denying the request (`401`), so a latent misconfiguration that
+  previously surfaced as auth-denied now surfaces as an invocation error.
 - Denials are now logged via `console.warn`; previously they were silent.
+- The `AuthorizerPolicyResult` type is now exported from the package root, so
+  you can type your handler's return value.
