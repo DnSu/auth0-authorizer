@@ -11,22 +11,7 @@ export interface AuthorizerPolicyResult {
         Version: "2012-10-17";
         Statement: Statement[];
     };
-    context: PolicyContext;
+    context?: PolicyContext;
 }
-export default function generatePolicy(principalId: string, effect: PolicyEffect, resource: string, context: Omit<PolicyContext, "principalId">): {
-    principalId: string;
-    policyDocument: {
-        Version: "2012-10-17";
-        Statement: (import("aws-lambda").BaseStatement & {
-            Action: string | string[];
-        } & import("aws-lambda").MaybeStatementPrincipal & {
-            Resource: string | string[];
-        })[];
-    };
-    context: {
-        roles: string[];
-        authUser: string;
-        principalId: string;
-    };
-};
+export default function generatePolicy(principalId: string, effect: PolicyEffect, resource: string, context?: Omit<PolicyContext, "principalId">): AuthorizerPolicyResult;
 export {};

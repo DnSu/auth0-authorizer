@@ -55,14 +55,12 @@ const auth0Config: Auth0Config = {
   audience: "https://my-api",
 };
 
-export const handler = async (
-  event: AuthorizerEvent,
-  context: unknown,
-  callback: (error?: string | null, response?: unknown) => void,
-) => {
-  await Auth0Authorizer(auth0Config, event, context, callback);
-};
+export const handler = async (event: AuthorizerEvent) =>
+  Auth0Authorizer(auth0Config, event);
 ```
+
+The authorizer returns an IAM policy (`AuthorizerPolicyResult`): an Allow policy
+for a valid token, a Deny policy otherwise. Return it directly from the handler.
 
 ## Serverless Framework examples
 
@@ -79,7 +77,12 @@ provider:
       customAuthorizer:
         type: request
         functionName: authorizerFunc
-        resultTtlInSeconds: 0
+        # Cache the authorizer result per token so a burst of parallel
+        # requests from one client invokes the authorizer once. Keep the TTL
+        # modest: Deny results are cached too.
+        resultTtlInSeconds: 300
+        identitySource:
+          - $request.header.Authorization
 
 functions:
   # Shared authorizer function
@@ -144,7 +147,29 @@ Type information:
 
 ## Behavior
 
-- Missing or malformed bearer token returns `Unauthorized`.
-- Invalid or unverifiable token returns `Unauthorized`.
-- Raw bearer tokens are not injected into Lambda authorizer context.
 - Valid token returns an IAM Allow policy for the current route/method.
+- Missing, malformed, invalid, or unverifiable tokens return an IAM **Deny**
+  policy — API Gateway responds `403` (both REST and HTTP APIs). The authorizer
+  Lambda itself never fails for expected auth failures, so a `500` from API
+  Gateway always indicates a genuine bug or misconfiguration.
+- Every denial logs its reason via `console.warn`
+  (`auth0-authorizer: request denied: ...`), including JWT verification errors
+  (e.g. `TokenExpiredError` with the token's `expiredAt`) and JWKS fetch
+  failures, so expired tokens are distinguishable from infrastructure problems
+  in CloudWatch.
+- Transient JWKS fetch failures (network errors, rate limiting) are retried
+  once after 250 ms before denying. A key genuinely missing from the JWKS
+  (`SigningKeyNotFoundError`) is not retried.
+- Raw bearer tokens are not injected into Lambda authorizer context.
+
+## Migrating from v2
+
+v3 is promise-based and no longer uses the Lambda callback:
+
+- Handler signature changed: `Auth0Authorizer(auth0Config, event)` returns the
+  policy — return it from your handler. The `context` and `callback` arguments
+  are gone.
+- Auth failures now produce a Deny policy (HTTP `403`) instead of failing the
+  invocation (`401` on REST APIs, an opaque `500` on HTTP APIs). If your client
+  treats `401` specially (e.g. to trigger re-login), update it to handle `403`.
+- Denials are now logged via `console.warn`; previously they were silent.

@@ -15,14 +15,17 @@ export default function generatePolicy(principalId, effect, resource, context) {
         Effect: effect,
         Resource: resource,
     };
-    return {
+    var policy = {
         principalId: principalId,
         policyDocument: {
             Version: "2012-10-17",
             Statement: [statementOne],
         },
+    };
+    if (context) {
         // Include principalId in context so HTTP API v2 forwards it to handlers
         // via requestContext.authorizer.lambda.principalId.
-        context: __assign({ principalId: principalId }, context),
-    };
+        policy.context = __assign({ principalId: principalId }, context);
+    }
+    return policy;
 }

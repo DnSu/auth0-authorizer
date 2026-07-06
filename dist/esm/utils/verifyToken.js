@@ -36,6 +36,11 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 import jwt from "jsonwebtoken";
 import jwksClient from "jwks-rsa";
+// One extra attempt after the initial call; only for errors that may be
+// transient (network failures, rate limiting) — a key genuinely missing
+// from the JWKS will not appear on retry.
+var JWKS_RETRY_ATTEMPTS = 2;
+var JWKS_RETRY_DELAY_MS = 250;
 var jwksClients = new Map();
 var normalizeDomain = function (domain) {
     return domain.replace(/^https?:\/\//i, "").replace(/\/+$/, "");
@@ -56,6 +61,24 @@ var getJwksClient = function (domain) {
     jwksClients.set(domain, client);
     return client;
 };
+var getSigningKeyWithRetry = function (jwksC, kid, attemptsLeft, callback) {
+    jwksC.getSigningKey(kid, function (err, key) {
+        if (err) {
+            if (err.name !== "SigningKeyNotFoundError" && attemptsLeft > 1) {
+                setTimeout(function () { return getSigningKeyWithRetry(jwksC, kid, attemptsLeft - 1, callback); }, JWKS_RETRY_DELAY_MS);
+                return;
+            }
+            callback(err);
+            return;
+        }
+        var signingKey = key === null || key === void 0 ? void 0 : key.getPublicKey();
+        if (!signingKey) {
+            callback(new Error("verifyToken: Missing signing key"));
+            return;
+        }
+        callback(null, signingKey);
+    });
+};
 export var verifyToken = function (tokenValue, auth0Config) { return __awaiter(void 0, void 0, void 0, function () {
     var domain, jwksC;
     return __generator(this, function (_a) {
@@ -72,39 +95,34 @@ export var verifyToken = function (tokenValue, auth0Config) { return __awaiter(v
                         callback(new Error("verifyToken: Missing kid header"));
                         return;
                     }
-                    jwksC.getSigningKey(header.kid, function (err, key) {
-                        if (err) {
-                            callback(err);
-                            return;
-                        }
-                        var signingKey = key === null || key === void 0 ? void 0 : key.getPublicKey();
-                        if (!signingKey) {
-                            callback(new Error("verifyToken: Missing signing key"));
-                            return;
-                        }
-                        callback(null, signingKey);
-                    });
+                    getSigningKeyWithRetry(jwksC, header.kid, JWKS_RETRY_ATTEMPTS, callback);
                 };
                 jwt.verify(tokenValue, getPublicKey, options, function (verifyError, decoded) {
                     if (verifyError) {
-                        resolve(false);
+                        var expiredAt = verifyError instanceof jwt.TokenExpiredError
+                            ? " (expiredAt: ".concat(verifyError.expiredAt.toISOString(), ")")
+                            : "";
+                        resolve({
+                            ok: false,
+                            reason: "".concat(verifyError.name, ": ").concat(verifyError.message).concat(expiredAt),
+                        });
                         return;
                     }
                     if (!decoded || typeof decoded === "string") {
-                        resolve(false);
+                        resolve({ ok: false, reason: "token decoded to a non-object payload" });
                         return;
                     }
                     var decodedPayload = decoded;
                     var sub = decodedPayload.sub;
                     if (typeof sub !== "string" || sub.length === 0) {
-                        resolve(false);
+                        resolve({ ok: false, reason: "token payload is missing sub claim" });
                         return;
                     }
                     var rolesClaim = decodedPayload["".concat(auth0Config.audience, "/roles")];
                     var roles = Array.isArray(rolesClaim)
                         ? rolesClaim.filter(function (role) { return typeof role === "string"; })
                         : [];
-                    resolve({ sub: sub, roles: roles, jwtPayload: decodedPayload });
+                    resolve({ ok: true, sub: sub, roles: roles, jwtPayload: decodedPayload });
                 });
             })];
     });

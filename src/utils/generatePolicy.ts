@@ -15,29 +15,34 @@ export interface AuthorizerPolicyResult {
     Version: "2012-10-17";
     Statement: Statement[];
   };
-  context: PolicyContext;
+  context?: PolicyContext;
 }
 
 export default function generatePolicy(
   principalId: string,
   effect: PolicyEffect,
   resource: string,
-  context: Omit<PolicyContext, "principalId">,
-) {
+  context?: Omit<PolicyContext, "principalId">,
+): AuthorizerPolicyResult {
   const statementOne: Statement = {
     Action: "execute-api:Invoke",
     Effect: effect,
     Resource: resource,
   };
 
-  return {
+  const policy: AuthorizerPolicyResult = {
     principalId,
     policyDocument: {
       Version: "2012-10-17" as const,
       Statement: [statementOne],
     },
+  };
+
+  if (context) {
     // Include principalId in context so HTTP API v2 forwards it to handlers
     // via requestContext.authorizer.lambda.principalId.
-    context: { principalId, ...context },
-  };
+    policy.context = { principalId, ...context };
+  }
+
+  return policy;
 }

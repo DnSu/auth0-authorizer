@@ -21,4 +21,3 @@ export interface Auth0Config {
   clientId?: string;
   audience: string;
 }
-

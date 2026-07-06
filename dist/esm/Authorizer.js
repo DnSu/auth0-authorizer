@@ -38,39 +38,43 @@ import generatePolicy from "./utils/generatePolicy";
 import getTokenFromEvent from "./utils/getTokenFromEvent";
 import { verifyToken } from "./utils/verifyToken";
 import getAuthInfo from "./utils/getAuthInfo";
-var auth0Authorizer = function (auth0Config, event, _context, callback) {
+// Auth failures return a Deny policy (API Gateway responds 403) instead of
+// failing the invocation: on HTTP APIs (v2) an errored authorizer Lambda
+// surfaces as an opaque 500 to the client. Unexpected errors still throw,
+// so genuine bugs keep producing a 500.
+var denyPolicy = function (resource, reason) {
+    console.warn("auth0-authorizer: request denied: ".concat(reason));
+    return generatePolicy("unauthorized", "Deny", resource || "*");
+};
+var auth0Authorizer = function (auth0Config, event) {
     return __awaiter(this, void 0, void 0, function () {
-        var resource, tokenValue, verifyResult, _a;
-        return __generator(this, function (_b) {
-            switch (_b.label) {
+        var resource, tokenValue, verifyResult;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
                 case 0:
-                    _b.trys.push([0, 2, , 3]);
                     resource = event.methodArn || event.routeArn || "";
                     if (!resource) {
-                        callback("Unauthorized");
-                        return [2 /*return*/];
+                        return [2 /*return*/, denyPolicy(resource, "event has no methodArn/routeArn")];
                     }
-                    tokenValue = getTokenFromEvent(event);
+                    try {
+                        tokenValue = getTokenFromEvent(event);
+                    }
+                    catch (_b) {
+                        return [2 /*return*/, denyPolicy(resource, "missing or malformed Authorization bearer token")];
+                    }
                     return [4 /*yield*/, verifyToken(tokenValue, auth0Config)];
                 case 1:
-                    verifyResult = _b.sent();
-                    if (verifyResult === false) {
-                        callback("Unauthorized");
-                        return [2 /*return*/];
+                    verifyResult = _a.sent();
+                    if (!verifyResult.ok) {
+                        return [2 /*return*/, denyPolicy(resource, verifyResult.reason)];
                     }
-                    callback(null, generatePolicy(verifyResult.sub, "Allow", resource, {
-                        roles: verifyResult.roles,
-                        authUser: JSON.stringify(verifyResult.jwtPayload),
-                    }));
-                    return [3 /*break*/, 3];
-                case 2:
-                    _a = _b.sent();
-                    callback("Unauthorized");
-                    return [3 /*break*/, 3];
-                case 3: return [2 /*return*/];
+                    return [2 /*return*/, generatePolicy(verifyResult.sub, "Allow", resource, {
+                            roles: verifyResult.roles,
+                            authUser: JSON.stringify(verifyResult.jwtPayload),
+                        })];
             }
         });
     });
 };
-export { getAuthInfo };
+export { getAuthInfo, };
 export default auth0Authorizer;
