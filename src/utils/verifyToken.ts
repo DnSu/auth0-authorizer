@@ -30,6 +30,9 @@ const getJwksClient = (domain: string) => {
     cacheMaxAge: 10 * 60 * 1000,
     rateLimit: true,
     jwksRequestsPerMinute: 10,
+    // Fail fast so a hung fetch leaves room for the retry within the
+    // authorizer's own timeout (jwks-rsa defaults to 30s, which doesn't).
+    timeout: 5000,
   });
 
   jwksClients.set(domain, client);
@@ -75,6 +78,9 @@ export const verifyToken = async (
       audience: auth0Config.audience,
       issuer: `https://${domain}/`,
       algorithms: ["RS256"],
+      // Tolerate small clock skew between the token issuer and this Lambda
+      // so freshly issued tokens are not rejected.
+      clockTolerance: 5,
     };
 
     const getPublicKey: jwt.GetPublicKeyOrSecret = (header, callback) => {

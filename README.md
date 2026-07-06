@@ -147,7 +147,11 @@ Type information:
 
 ## Behavior
 
-- Valid token returns an IAM Allow policy for the current route/method.
+- Valid token returns an IAM Allow policy. Policies (Allow and Deny) are scoped
+  to the whole stage (`arn:...:api-id/stage/*`), not the triggering route: when
+  authorizer result caching is enabled, API Gateway replays the cached policy
+  for every route the same token hits during the TTL, and a route-scoped policy
+  would deny all other routes.
 - Missing, malformed, invalid, or unverifiable tokens return an IAM **Deny**
   policy — API Gateway responds `403` (both REST and HTTP APIs). The authorizer
   Lambda itself never fails for expected auth failures, so a `500` from API
@@ -159,7 +163,13 @@ Type information:
   in CloudWatch.
 - Transient JWKS fetch failures (network errors, rate limiting) are retried
   once after 250 ms before denying. A key genuinely missing from the JWKS
-  (`SigningKeyNotFoundError`) is not retried.
+  (`SigningKeyNotFoundError`) is not retried. JWKS requests time out after 5 s
+  so a hung fetch fails fast enough to leave room for the retry.
+- Token verification allows 5 s of clock tolerance, so freshly issued tokens
+  are not rejected by minor clock skew between Auth0 and the Lambda.
+- An empty or missing `domain`/`audience` in `Auth0Config` throws immediately
+  (an invocation error, i.e. `500`): misconfiguration is a consumer bug, not an
+  auth failure, and should fail loudly rather than deny every request.
 - Raw bearer tokens are not injected into Lambda authorizer context.
 
 ## Migrating from v2

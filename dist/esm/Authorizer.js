@@ -38,6 +38,7 @@ import generatePolicy from "./utils/generatePolicy";
 import getTokenFromEvent from "./utils/getTokenFromEvent";
 import { verifyToken } from "./utils/verifyToken";
 import getAuthInfo from "./utils/getAuthInfo";
+import wildcardResource from "./utils/wildcardResource";
 // Auth failures return a Deny policy (API Gateway responds 403) instead of
 // failing the invocation: on HTTP APIs (v2) an errored authorizer Lambda
 // surfaces as an opaque 500 to the client. Unexpected errors still throw,
@@ -46,13 +47,27 @@ var denyPolicy = function (resource, reason) {
     console.warn("auth0-authorizer: request denied: ".concat(reason));
     return generatePolicy("unauthorized", "Deny", resource || "*");
 };
+// Misconfiguration (as opposed to a bad token) is a deploy-time bug in the
+// consumer: throw so the invocation fails loudly instead of denying every
+// request with a misleading JWKS error.
+var validateConfig = function (auth0Config) {
+    if (typeof (auth0Config === null || auth0Config === void 0 ? void 0 : auth0Config.domain) !== "string" ||
+        auth0Config.domain.trim() === "") {
+        throw new Error("auth0-authorizer: auth0Config.domain must be a non-empty string");
+    }
+    if (typeof auth0Config.audience !== "string" ||
+        auth0Config.audience.trim() === "") {
+        throw new Error("auth0-authorizer: auth0Config.audience must be a non-empty string");
+    }
+};
 var auth0Authorizer = function (auth0Config, event) {
     return __awaiter(this, void 0, void 0, function () {
         var resource, tokenValue, verifyResult;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    resource = event.methodArn || event.routeArn || "";
+                    validateConfig(auth0Config);
+                    resource = wildcardResource(event.methodArn || event.routeArn || "");
                     if (!resource) {
                         return [2 /*return*/, denyPolicy(resource, "event has no methodArn/routeArn")];
                     }
